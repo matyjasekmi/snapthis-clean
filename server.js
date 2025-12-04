@@ -97,11 +97,12 @@ app.post('/checkout', async (req, res) => {
     const amount = Math.round(parseFloat(String(product.price || '0')) * 100);
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'blik', 'p24', 'klarna'],
+
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'pln',
             product_data: { name: product.title },
             unit_amount: amount
           },
@@ -133,11 +134,11 @@ app.post('/create-checkout-session', async (req, res) => {
     const amount = Math.round(parseFloat(String(product.price || '0')) * 100);
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'blik', 'p24', 'klarna'],
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'pln',
             product_data: { name: product.title },
             unit_amount: amount
           },
@@ -235,11 +236,11 @@ app.post('/buy/:id/create-pay', async (req, res) => {
     const amount = Math.round(parseFloat(String(product.price || '0')) * 100);
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'blik', 'p24', 'klarna'],
       client_reference_id: token,
       metadata: { token },
       line_items: [
-        { price_data: { currency: 'usd', product_data: { name: product.title }, unit_amount: amount }, quantity: 1 }
+        { price_data: { currency: 'pln', product_data: { name: product.title }, unit_amount: amount }, quantity: 1 }
       ],
       success_url: `${siteUrl}/guest/${token}?session_id={CHECKOUT_SESSION_ID}&paid=1`,
       cancel_url: `${siteUrl}/guest/${token}?cancel=1`,

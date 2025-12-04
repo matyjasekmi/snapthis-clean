@@ -93,7 +93,8 @@ app.post('/buy/:id/create', async (req, res) => {
   const title = req.body.title || `${id} Event`;
   const buyerEmail = req.body.buyerEmail || '';
   const token = shortid.generate();
-  const record = { id: token, productId: id, title, buyerEmail, createdAt: new Date().toISOString() };
+  // Use lowercase keys which match unquoted postgres column names
+  const record = { id: token, productid: id, title, buyeremail: buyerEmail, createdat: new Date().toISOString() };
   if (supabaseServer) {
     try {
       const { data, error } = await supabaseServer.from('guestpages').insert([record]);
@@ -145,7 +146,7 @@ app.post('/guest/:token/upload', upload.single('photo'), async (req, res) => {
   if (!req.file) return res.redirect(`/guest/${token}`);
   const filepath = req.file.path;
   const filename = req.file.filename;
-  const record = { id: shortid.generate(), token, filename, originalname: req.file.originalname, createdAt: new Date().toISOString() };
+  const record = { id: shortid.generate(), token, filename, originalname: req.file.originalname, createdat: new Date().toISOString() };
   // Upload to Supabase Storage if configured
   if (supabaseServer && process.env.SUPABASE_BUCKET) {
     try {

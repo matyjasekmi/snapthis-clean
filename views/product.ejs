@@ -6,7 +6,10 @@
     <h1><%= product.title %></h1>
     <p><%= product.description %></p>
     <div>Price: <%= product.price %></div>
-    <a href="/buy/<%= product.id %>">Buy</a>
+    <form action="/checkout" method="post">
+      <input type="hidden" name="productId" value="<%= product.id %>" />
+      <input type="submit" value="Przejdź do płatności">
+    </form>
   </main>
 </body>
 </html>

@@ -8,9 +8,11 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const { supabaseServer } = require('./lib/supabase');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -18,6 +20,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(helmet());
 
+// Stripe: create checkout session from product
+// Stripe checkout route - moved to after fallbackStore declaration
+
+// Use cookie-session for serverless-compatible sessions
 // Use cookie-session for serverless-compatible sessions
 app.set('trust proxy', 1);
 app.use(cookieSession({
@@ -55,6 +61,42 @@ const fallbackStore = {
   guestPages: [],
   guestUploads: []
 };
+
+// Stripe: create checkout session from product
+app.post('/checkout', async (req, res) => {
+  try {
+    const productId = req.body.productId || 'standard';
+    // find product
+    let product = fallbackStore.products.find(p => p.id === productId);
+    if (supabaseServer) {
+      const { data } = await supabaseServer.from('products').select('*').eq('id', productId).limit(1);
+      if (data && data[0]) product = data[0];
+    }
+    if (!product) return res.status(404).send('Product not found');
+    const siteUrl = process.env.SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://snapthis.vercel.app');
+    const amount = Math.round(parseFloat(String(product.price || '0')) * 100);
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: { name: product.title },
+            unit_amount: amount
+          },
+          quantity: 1
+        }
+      ],
+      success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/product/${productId}`,
+    });
+    return res.redirect(303, session.url);
+  } catch (e) {
+    console.error('[stripe] create session failed', e);
+    return res.status(500).send('Checkout error');
+  }
+});
 
 // Home
 app.get('/', async (req, res) => {
@@ -201,6 +243,14 @@ app.get('/admin', (req, res) => {
     // async fetch (no await to keep simple) but we'll just await
   }
   res.render('admin/dashboard', { products, guestPages });
+});
+
+// Stripe success and cancel pages
+app.get('/success', (req, res) => {
+  res.send('<html><body><h1>Payment successful</h1><p>Thank you for your purchase.</p><p><a href="/">Return home</a></p></body></html>');
+});
+app.get('/cancel', (req, res) => {
+  res.send('<html><body><h1>Payment cancelled</h1><p>Your payment was cancelled.</p><p><a href="/">Return home</a></p></body></html>');
 });
 
 // Health

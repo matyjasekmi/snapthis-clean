@@ -10,13 +10,17 @@
       <button type="submit">Upload</button>
     </form>
     <h2>Gallery</h2>
-    <% uploads.forEach(function(u){ %>
-      <% if (u.url) { %>
-        <img src="<%= u.url %>" width="200" />
-      <% } else { %>
-        <div><%= u.originalname %></div>
-      <% } %>
-    <% }) %>
+    <div class="gallery">
+      <% uploads.forEach(function(u){ %>
+        <div class="gallery-item">
+          <% if (u.url) { %>
+            <img src="<%= u.url %>" width="200" alt="<%= u.originalname %>" loading="lazy" />
+          <% } else { %>
+            <div><%= u.originalname %></div>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
   </main>
 </body>
 </html>

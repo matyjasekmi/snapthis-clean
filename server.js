@@ -121,6 +121,21 @@ app.get('/guest/:token', async (req, res) => {
   if (supabaseServer) {
     try { const { data } = await supabaseServer.from('guestuploads').select('*').eq('token', token); if (data) uploads = data; } catch(e) { console.error('[supabase] failed to load uploads', e); }
   } else { uploads = (fallbackStore.guestUploads || []).filter(u => u.token === token); }
+
+  // Make sure every upload has a public URL (support fallback to SUPABASE_URL or local uploads path)
+  try {
+    uploads = (uploads || []).map(u => {
+      if (u.url) return u;
+      const bucket = process.env.SUPABASE_BUCKET;
+      if (process.env.SUPABASE_URL && bucket && u.filename) {
+        const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/uploads/${u.filename}`;
+        return Object.assign({}, u, { url: publicUrl });
+      }
+      // fallback: local path
+      if (u.filename) return Object.assign({}, u, { url: `/uploads/${u.filename}` });
+      return u;
+    });
+  } catch(e) { console.error('[server] failed to normalise upload urls', e); }
   res.render('guest', { page, uploads });
 });
 

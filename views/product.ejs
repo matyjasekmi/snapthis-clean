@@ -8,7 +8,7 @@
     <div>Price: <%= product.price %></div>
     <form id="checkout-form" action="/checkout" method="post">
       <input type="hidden" name="productId" value="<%= product.id %>" />
-      <input type="submit" value="Przejdź do płatności">
+      <input id="checkout-submit" type="submit" value="Przejdź do płatności">
     </form>
     <script src="https://js.stripe.com/v3/"></script>
     <script>
@@ -19,6 +19,9 @@
         const stripeClient = Stripe(pubKey);
         form.addEventListener('submit', async function(e){
           e.preventDefault();
+          const submit = document.getElementById('checkout-submit');
+          submit.disabled = true;
+          submit.value = 'Przekierowanie...';
           const data = new URLSearchParams(new FormData(form));
           try {
             const resp = await fetch('/create-checkout-session', { method: 'POST', body: data });
@@ -30,6 +33,8 @@
             } else if (json.url) {
               window.location = json.url;
             }
+            submit.disabled = false;
+            submit.value = 'Przejdź do płatności';
           } catch (err) { console.error('client stripe fail', err); window.location.href = form.action; }
         });
       });

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Buy</title></head>
+<body>
+  <main>
+    <h1>Buy <%= product.title %></h1>
+    <% if (error) { %><div style="color:red;"><%= error %></div><% } %>
+    <form method="POST" action="/buy/<%= product.id %>/create">
+      <label>Title <input name="title" type="text" value="" /></label>
+      <label>Your email <input name="buyerEmail" type="email" required /></label>
+      <button type="submit">Create guest page</button>
+    </form>
+  </main>
+</body>
+</html>

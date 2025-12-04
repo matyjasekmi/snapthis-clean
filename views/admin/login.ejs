@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Admin login</title></head>
+<body>
+  <main>
+    <h1>Admin</h1>
+    <% if (error) { %><div style="color:red">Invalid credentials</div><% } %>
+    <form method="POST" action="/admin/login">
+      <label>Username <input name="username"></label>
+      <label>Password <input type="password" name="password"></label>
+      <button type="submit">Login</button>
+    </form>
+  </main>
+</body>
+</html>

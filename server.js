@@ -23,7 +23,8 @@ app.use((req, res, next) => {
   return bodyParser.urlencoded({ extended: true })(req, res, next);
 });
 // Configure Content Security Policy to allow Stripe and Supabase resources
-const SUPABASE_URL_CSP = process.env.SUPABASE_URL ? process.env.SUPABASE_URL.replace(/^https?:\/\//, '') : 'snxzxesrbkfpheegbpms.supabase.co';
+const SUPABASE_URL_RAW = process.env.SUPABASE_URL || 'https://snxzxesrbkfpheegbpms.supabase.co';
+const SUPABASE_URL_CSP = SUPABASE_URL_RAW.replace(/^https?:\/\//, '').replace(/\/$/, '').trim();
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {

@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 const helmet = require('helmet');
 const shortid = require('shortid');
 const path = require('path');
@@ -18,10 +18,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(helmet());
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'snapthis-secret',
-  resave: false,
-  saveUninitialized: false,
+// Use cookie-session for serverless-compatible sessions
+app.set('trust proxy', 1);
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.SESSION_SECRET || 'snapthis-secret'],
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  httpOnly: true,
+  secure: !!process.env.VERCEL,
+  sameSite: 'lax'
 }));
 
 // middleware for contact email

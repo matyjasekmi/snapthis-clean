@@ -102,6 +102,42 @@ app.post('/checkout', async (req, res) => {
   }
 });
 
+// Create-checkout-session endpoint for client-side redirect (returns JSON)
+app.post('/create-checkout-session', async (req, res) => {
+  try {
+    const productId = req.body.productId || 'standard';
+    // find product
+    let product = fallbackStore.products.find(p => p.id === productId);
+    if (supabaseServer) {
+      const { data } = await supabaseServer.from('products').select('*').eq('id', productId).limit(1);
+      if (data && data[0]) product = data[0];
+    }
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    const siteUrl = process.env.SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://snapthis.vercel.app');
+    const amount = Math.round(parseFloat(String(product.price || '0')) * 100);
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: { name: product.title },
+            unit_amount: amount
+          },
+          quantity: 1
+        }
+      ],
+      success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/product/${productId}`,
+    });
+    return res.json({ sessionId: session.id, url: session.url });
+  } catch (e) {
+    console.error('[stripe] create session failed', e);
+    return res.status(500).json({ error: 'Checkout error' });
+  }
+});
+
 // Home
 app.get('/', async (req, res) => {
   let products = fallbackStore.products;

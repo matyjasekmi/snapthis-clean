@@ -17,7 +17,11 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.urlencoded({ extended: true }));
+// prepare to parse webhook payloads as raw body for stripe signature verification
+app.use((req, res, next) => {
+  if (req.originalUrl === '/webhook') return next();
+  return bodyParser.urlencoded({ extended: true })(req, res, next);
+});
 app.use(helmet());
 
 // Stripe: create checkout session from product
@@ -153,6 +157,45 @@ app.post('/buy/:id/create', async (req, res) => {
   return res.redirect(`/guest/${token}`);
 });
 
+// Create guest and start payment flow (create guestpage then redirect to Stripe Checkout)
+app.post('/buy/:id/create-pay', async (req, res) => {
+  const id = req.params.id;
+  const title = req.body.title || `${id} Event`;
+  const buyerEmail = req.body.buyerEmail || '';
+  const token = shortid.generate();
+  const record = { id: token, productid: id, title, buyeremail: buyerEmail, createdat: new Date().toISOString() };
+  if (supabaseServer) {
+    try {
+      const { data, error } = await supabaseServer.from('guestpages').insert([record]);
+      if (error) throw error;
+    } catch (e) { console.error('[supabase] failed to insert guestPage', e); }
+  }
+  // create stripe checkout for this product
+  try {
+    const productId = id;
+    let product = fallbackStore.products.find(p => p.id === productId);
+    if (supabaseServer) {
+      const { data } = await supabaseServer.from('products').select('*').eq('id', productId).limit(1);
+      if (data && data[0]) product = data[0];
+    }
+    if (!product) return res.status(404).send('Product not found');
+    const siteUrl = process.env.SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://snapthis.vercel.app');
+    const amount = Math.round(parseFloat(String(product.price || '0')) * 100);
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      client_reference_id: token,
+      metadata: { token },
+      line_items: [
+        { price_data: { currency: 'usd', product_data: { name: product.title }, unit_amount: amount }, quantity: 1 }
+      ],
+      success_url: `${siteUrl}/guest/${token}?session_id={CHECKOUT_SESSION_ID}&paid=1`,
+      cancel_url: `${siteUrl}/guest/${token}?cancel=1`,
+    });
+    return res.redirect(303, session.url);
+  } catch (e) { console.error('[stripe] create session failed', e); return res.status(500).send('Checkout error'); }
+});
+
 // Guest page
 app.get('/guest/:token', async (req, res) => {
   const token = req.params.token;
@@ -184,7 +227,9 @@ app.get('/guest/:token', async (req, res) => {
       return u;
     });
   } catch(e) { console.error('[server] failed to normalise upload urls', e); }
-  res.render('guest', { page, uploads });
+  // Detect if redirect from Stripe success
+  const paid = req.query && (req.query.paid === '1' || !!req.query.session_id);
+  res.render('guest', { page, uploads, paid });
 });
 
 // Upload handler
@@ -216,6 +261,37 @@ app.post('/guest/:token/upload', upload.single('photo'), async (req, res) => {
     try { await supabaseServer.from('guestuploads').insert([record]); } catch(e){ console.error('[supabase] failed to insert upload record', e); }
   } else { fallbackStore.guestUploads.push(record); }
   return res.redirect(`/guest/${token}`);
+});
+
+// Stripe webhook handler - update DB on checkout completion
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  let event;
+  try {
+    if (webhookSecret) {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } else {
+      // no webhook secret provided - parse payload (not recommended in prod)
+      event = req.body;
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] signature verification failed', err);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  // Handle the event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const token = (session.metadata && session.metadata.token) || session.client_reference_id;
+    if (token && supabaseServer) {
+      try {
+        // try to update guestpages paid flag
+        const { error } = await supabaseServer.from('guestpages').update({ paid: true }).eq('id', token);
+        if (error) console.error('[stripe-webhook] supabase update error', error);
+      } catch (e) { console.error('[stripe-webhook] failed to update DB', e); }
+    }
+  }
+  return res.json({ received: true });
 });
 
 // Admin routes - simple login

@@ -4,6 +4,9 @@
 <body>
   <main>
     <h1><%= page.title %></h1>
+    <% if (typeof paid !== 'undefined' && paid) { %>
+      <div style="color:green;">Payment received — thanks!</div>
+    <% } %>
     <div>Upload area</div>
     <form method="POST" action="/guest/<%= page.id %>/upload" enctype="multipart/form-data">
       <input type="file" name="photo" />

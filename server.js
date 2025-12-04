@@ -140,9 +140,13 @@ app.post('/guest/:token/upload', upload.single('photo'), async (req, res) => {
       if (error) throw error;
       // remove local tmp file
       try { fs.unlinkSync(filepath); } catch(e){}
-      // record URL
-      const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/uploads/${filename}`;
-      record.url = publicUrl;
+      // record URL -- prefer SDK helper to build public URL
+      try {
+        const { data: urlData } = supabaseServer.storage.from(bucket).getPublicUrl(`uploads/${filename}`);
+        record.url = urlData && urlData.publicUrl ? urlData.publicUrl : `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/uploads/${filename}`;
+      } catch (err) {
+        record.url = `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/uploads/${filename}`;
+      }
     } catch (e) { console.error('[supabase] storage upload error', e); }
   }
   if (supabaseServer) {

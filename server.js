@@ -186,6 +186,12 @@ app.post('/admin/login', (req, res) => {
   }
   return res.render('admin/login', { error: 'invalid' });
 });
+// Admin logout
+app.get('/admin/logout', (req, res) => {
+  // destroy session for cookie-session
+  try { req.session = null; } catch(e) { req.session = {}; }
+  return res.redirect('/admin/login');
+});
 app.get('/admin', (req, res) => {
   if (!req.session || !req.session.isAdmin) return res.redirect('/admin/login');
   // fetch products & guest pages

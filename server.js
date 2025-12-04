@@ -22,7 +22,22 @@ app.use((req, res, next) => {
   if (req.originalUrl === '/webhook') return next();
   return bodyParser.urlencoded({ extended: true })(req, res, next);
 });
-app.use(helmet());
+// Configure Content Security Policy to allow Stripe and Supabase resources
+const SUPABASE_URL_CSP = process.env.SUPABASE_URL ? process.env.SUPABASE_URL.replace(/^https?:\/\//, '') : 'snxzxesrbkfpheegbpms.supabase.co';
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", 'https://js.stripe.com'],
+      scriptSrcElem: ["'self'", 'https://js.stripe.com'],
+      connectSrc: ["'self'", 'https://api.stripe.com', 'https://checkout.stripe.com', `https://${SUPABASE_URL_CSP}`],
+      frameSrc: ["'self'", 'https://js.stripe.com', 'https://checkout.stripe.com'],
+      formAction: ["'self'", 'https://checkout.stripe.com'],
+      imgSrc: ["'self'", 'data:', `https://${SUPABASE_URL_CSP}`],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    }
+  }
+}));
 
 // Stripe: create checkout session from product
 // Stripe checkout route - moved to after fallbackStore declaration

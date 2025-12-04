@@ -96,7 +96,7 @@ app.post('/buy/:id/create', async (req, res) => {
   const record = { id: token, productId: id, title, buyerEmail, createdAt: new Date().toISOString() };
   if (supabaseServer) {
     try {
-      const { data, error } = await supabaseServer.from('guestPages').insert([record]);
+      const { data, error } = await supabaseServer.from('guestpages').insert([record]);
       if (error) throw error;
     } catch (e) { console.error('[supabase] failed to insert guestPage', e); fallbackStore.guestPages.push(record); }
   } else {
@@ -111,7 +111,7 @@ app.get('/guest/:token', async (req, res) => {
   let page = (fallbackStore.guestPages || []).find(p => p.id === token);
   if (supabaseServer) {
     try {
-      const { data, error } = await supabaseServer.from('guestPages').select('*').eq('id', token).limit(1);
+      const { data, error } = await supabaseServer.from('guestpages').select('*').eq('id', token).limit(1);
       if (!error && data && data[0]) page = data[0];
     } catch (e) { console.error('[supabase] failed to get guest page', e); }
   }
@@ -119,7 +119,7 @@ app.get('/guest/:token', async (req, res) => {
   // guest uploads
   let uploads = [];
   if (supabaseServer) {
-    try { const { data } = await supabaseServer.from('guestUploads').select('*').eq('token', token); if (data) uploads = data; } catch(e) { console.error('[supabase] failed to load uploads', e); }
+    try { const { data } = await supabaseServer.from('guestuploads').select('*').eq('token', token); if (data) uploads = data; } catch(e) { console.error('[supabase] failed to load uploads', e); }
   } else { uploads = (fallbackStore.guestUploads || []).filter(u => u.token === token); }
   res.render('guest', { page, uploads });
 });
@@ -150,7 +150,7 @@ app.post('/guest/:token/upload', upload.single('photo'), async (req, res) => {
     } catch (e) { console.error('[supabase] storage upload error', e); }
   }
   if (supabaseServer) {
-    try { await supabaseServer.from('guestUploads').insert([record]); } catch(e){ console.error('[supabase] failed to insert upload record', e); }
+    try { await supabaseServer.from('guestuploads').insert([record]); } catch(e){ console.error('[supabase] failed to insert upload record', e); }
   } else { fallbackStore.guestUploads.push(record); }
   return res.redirect(`/guest/${token}`);
 });

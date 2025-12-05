@@ -393,13 +393,21 @@ app.get('/admin/logout', (req, res) => {
   try { req.session = null; } catch(e) { req.session = {}; }
   return res.redirect('/admin/login');
 });
-app.get('/admin', (req, res) => {
+app.get('/admin', async (req, res) => {
   if (!req.session || !req.session.isAdmin) return res.redirect('/admin/login');
   // fetch products & guest pages
   let products = fallbackStore.products;
   let guestPages = fallbackStore.guestPages;
   if (supabaseServer) {
-    // async fetch (no await to keep simple) but we'll just await
+    try {
+      const { data: pages, error: pagesErr } = await supabaseServer.from('guestpages').select('*').order('createdat', { ascending: false });
+      if (!pagesErr && pages) guestPages = pages;
+      // fetch uploads to count per token
+      const { data: uploads } = await supabaseServer.from('guestuploads').select('token');
+      const counts = {};
+      (uploads || []).forEach(u => { counts[u.token] = (counts[u.token] || 0) + 1; });
+      guestPages = (guestPages || []).map(g => Object.assign({}, g, { uploadCount: counts[g.id] || 0 }));
+    } catch (e) { console.error('[supabase] failed to fetch admin guestPages', e); }
   }
   res.render('admin/dashboard', { products, guestPages });
 });

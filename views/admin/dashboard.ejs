@@ -18,11 +18,50 @@
       <% }) %>
     </ul>
     <h2>Guest pages</h2>
-    <ul>
-      <% guestPages.forEach(function(g){ %>
-        <li><a href="/admin/guestpages/<%= g.id %>"><%= g.title %></a> (uploads: <%= g.uploadCount || 0 %>)</li>
-      <% }) %>
-    </ul>
+    <div class="card card--section admin-guestpages">
+      <div class="card-body">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Product</th>
+              <th>Buyer Email</th>
+              <th>Buyer Name</th>
+              <th>Event Date</th>
+              <th>Background</th>
+              <th>Guest Names</th>
+              <th>Quantity</th>
+              <th>Shipping Address</th>
+              <th>Paid</th>
+              <th>Uploads</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% (guestPages || []).forEach(function(g){ %>
+              <tr>
+                <td><code><%= g.id %></code></td>
+                <td><a href="/admin/guestpages/<%= g.id %>"><%= g.title %></a></td>
+                <td><%= g.productid || '-' %></td>
+                <td><%= g.buyeremail || '-' %></td>
+                <td><%= g.buyername || '-' %></td>
+                <td><%= g.eventdate || '-' %></td>
+                <td><%= g.background || '-' %></td>
+                <td><%= g.guestnames || '-' %></td>
+                <td><%= g.quantity || 0 %></td>
+                <td><%= (g.shipping_address ? (typeof g.shipping_address === 'string' ? g.shipping_address : JSON.stringify(g.shipping_address)) : '-') %></td>
+                <td><%= g.paid ? '✅' : '—' %></td>
+                <td><%= g.uploadCount || 0 %></td>
+                <td><%= g.createdat ? new Date(g.createdat).toLocaleString() : '-' %></td>
+                <td><a class="btn btn-muted" href="/admin/guestpages/<%= g.id %>">View</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </main>
   <%- include('../partials/footer') %>
 </body>

@@ -74,9 +74,9 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 // Helper: fallback product store when no supabase
 const fallbackStore = {
   products: [
-    { id: 'standard', title: 'Standard QR', price: '0.99', description: 'QR only (download)' },
-    { id: 'premium', title: 'Premium print', price: '3.99', description: 'Printed and more' },
-    { id: 'exclusive', title: 'Exclusive with shipping', price: '9.99', description: 'Shipped to you' }
+    { id: 'standard', title: 'Standard QR', price: '99', description: 'QR only (download)' },
+    { id: 'premium', title: 'Premium print', price: '199', description: 'Printed and more' },
+    { id: 'exclusive', title: 'Exclusive with shipping', price: '249', description: 'Shipped to you' }
   ],
   guestPages: [],
   guestUploads: []

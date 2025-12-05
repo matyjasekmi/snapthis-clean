@@ -28,20 +28,24 @@
           </label>
           <label class="input-with-icon">Wybierz tło
             <div class="bg-preview-grid">
-              <label class="bg-thumb"><input type="radio" name="background" value="/images/bg1.svg" checked /><img src="/images/bg1.svg" alt="Tło 1" /><span class="bg-thumb-label">Tło 1</span></label>
-              <label class="bg-thumb"><input type="radio" name="background" value="/images/bg2.svg" /><img src="/images/bg2.svg" alt="Tło 2" /><span class="bg-thumb-label">Tło 2</span></label>
-              <label class="bg-thumb"><input type="radio" name="background" value="/images/bg3.svg" /><img src="/images/bg3.svg" alt="Tło 3" /><span class="bg-thumb-label">Tło 3</span></label>
+              <label class="bg-thumb"><input type="radio" name="background" value="/images/tlo_demo.png" checked /><img src="/images/tlo_demo.png" alt="Tło 1" /><span class="bg-thumb-label">Tło 1</span></label>
+              <label class="bg-thumb"><input type="radio" name="background" value="/images/tlo_demo2.png" /><img src="/images/tlo_demo2.png" alt="Tło 2" /><span class="bg-thumb-label">Tło 2</span></label>
+              <label class="bg-thumb"><input type="radio" name="background" value="/images/tlo_demo3.png" /><img src="/images/tlo_demo3.png" alt="Tło 3" /><span class="bg-thumb-label">Tło 3</span></label>
             </div>
           </label>
+          <% if (product.id === 'premium' || product.id === 'exclusive') { %>
           <label class="input-with-icon">Ilość sztuk
-            <input name="quantity" type="number" min="1" value="1" />
+            <input name="quantity" type="number" min="1" value="1" required />
           </label>
           <label class="input-with-icon">Wydruk imion (oddziel przecinkiem)
             <textarea name="guestnames" rows="3" placeholder="Jan Kowalski, Anna Nowak"></textarea>
           </label>
+          <% } %>
+          <% if (product.id === 'exclusive') { %>
           <label class="input-with-icon">Adres wysyłki
-            <textarea name="shipping_address" rows="2" placeholder="ul. Przykladowa 1, 00-000 Miasto"></textarea>
+            <textarea name="shipping_address" rows="2" placeholder="ul. Przykladowa 1, 00-000 Miasto" required></textarea>
           </label>
+          <% } %>
         </div>
       </div>
       

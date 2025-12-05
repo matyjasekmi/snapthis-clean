@@ -125,8 +125,14 @@ app.post('/create-checkout-session', async (req, res) => {
     const productId = req.body.productId || 'standard';
     const title = req.body.title || `${productId} Event`;
     const buyerEmail = req.body.buyerEmail || '';
+    const buyername = req.body.buyername || null;
+    const eventdate = req.body.eventdate || null;
+    const background = req.body.background || null;
+    const guestnames = req.body.guestnames || null;
+    const quantity = req.body.quantity ? parseInt(req.body.quantity, 10) : 0;
+    const shipping_address = req.body.shipping_address ? { address: req.body.shipping_address } : null;
     const token = shortid.generate();
-    const record = { id: token, productid: productId, title, buyeremail: buyerEmail, createdat: new Date().toISOString() };
+    const record = { id: token, productid: productId, title, buyeremail: buyerEmail, buyername, eventdate, background, guestnames, quantity, shipping_address, createdat: new Date().toISOString() };
     // create guestpage record before creating Stripe session
     if (supabaseServer) {
       try { const { data, error } = await supabaseServer.from('guestpages').insert([record]); if (error) throw error; } catch(e) { console.error('[supabase] failed to insert guestPage', e); }
@@ -207,9 +213,15 @@ app.post('/buy/:id/create', async (req, res) => {
   const id = req.params.id;
   const title = req.body.title || `${id} Event`;
   const buyerEmail = req.body.buyerEmail || '';
+  const buyername = req.body.buyername || null;
+  const eventdate = req.body.eventdate || null;
+  const background = req.body.background || null;
+  const guestnames = req.body.guestnames || null;
+  const quantity = req.body.quantity ? parseInt(req.body.quantity, 10) : 0;
+  const shipping_address = req.body.shipping_address ? { address: req.body.shipping_address } : null;
   const token = shortid.generate();
   // Use lowercase keys which match unquoted postgres column names
-  const record = { id: token, productid: id, title, buyeremail: buyerEmail, createdat: new Date().toISOString() };
+  const record = { id: token, productid: id, title, buyeremail: buyerEmail, buyername, eventdate, background, guestnames, quantity, shipping_address, createdat: new Date().toISOString() };
   if (supabaseServer) {
     try {
       const { data, error } = await supabaseServer.from('guestpages').insert([record]);
@@ -226,8 +238,14 @@ app.post('/buy/:id/create-pay', async (req, res) => {
   const id = req.params.id;
   const title = req.body.title || `${id} Event`;
   const buyerEmail = req.body.buyerEmail || '';
+  const buyername = req.body.buyername || null;
+  const eventdate = req.body.eventdate || null;
+  const background = req.body.background || null;
+  const guestnames = req.body.guestnames || null;
+  const quantity = req.body.quantity ? parseInt(req.body.quantity, 10) : 0;
+  const shipping_address = req.body.shipping_address ? { address: req.body.shipping_address } : null;
   const token = shortid.generate();
-  const record = { id: token, productid: id, title, buyeremail: buyerEmail, createdat: new Date().toISOString() };
+  const record = { id: token, productid: id, title, buyeremail: buyerEmail, buyername, eventdate, background, guestnames, quantity, shipping_address, createdat: new Date().toISOString() };
   if (supabaseServer) {
     try {
       const { data, error } = await supabaseServer.from('guestpages').insert([record]);

@@ -1,8 +1,15 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Admin</title></head>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
 <body>
-  <main>
-    <p><a href="/admin/logout">Logout</a></p>
+  <%- include('../partials/header') %>
+  <main class="container admin-panel">
+    <p><a class="btn btn-muted" href="/admin/logout">Wyloguj</a></p>
     <h1>Admin dashboard</h1>
     <h2>Products</h2>
     <ul>
@@ -17,5 +24,6 @@
       <% }) %>
     </ul>
   </main>
+  <%- include('../partials/footer') %>
 </body>
 </html>

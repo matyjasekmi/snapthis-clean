@@ -7,17 +7,26 @@
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-  <main>
-    <h1>SnapThis - Products</h1>
-    <div>
+  <%- include('partials/header') %>
+  <main class="container">
+    <h1>SnapThis - Produkty</h1>
+    <div class="grid">
       <% products.forEach(function(p){ %>
-        <div>
+        <div class="card">
+          <div class="card-top">
+            <% if (p.image) { %>
+              <img src="<%= p.image %>" alt="<%= p.title %>" />
+            <% } %>
+          </div>
+          <div class="card-body">
           <h2><a href="/product/<%= p.id %>"><%= p.title %></a></h2>
           <p><%= p.description || '' %></p>
-          <div>Price: <%= p.price %></div>
+            <div class="price-row">Price: <div class="price-current"><%= p.price %></div></div>
+          </div>
         </div>
       <% }) %>
     </div>
   </main>
+  <%- include('partials/footer') %>
 </body>
 </html>

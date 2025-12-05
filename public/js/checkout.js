@@ -4,8 +4,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const pubKey = form.dataset.stripeKey || '';
   if (!pubKey) return;
   const stripeClient = Stripe(pubKey);
-  // Debug: indicate client-side script executed
-  try { const info = document.createElement('div'); info.style.color = 'green'; info.style.fontSize='12px'; info.textContent = 'JS loaded'; form.parentNode.insertBefore(info, form); } catch(e){}
+  // (no debug DOM insertions in production)
 
   const submit = document.getElementById('checkout-submit');
   form.addEventListener('submit', async function(e){

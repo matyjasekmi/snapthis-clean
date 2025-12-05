@@ -1,18 +1,34 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Buy</title></head>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Buy</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
 <body>
-  <main>
-    <h1>Buy <%= product.title %></h1>
+  <%- include('partials/header') %>
+  <main class="container">
+    <h1>Zakup <%= product.title %></h1>
     <% if (error) { %><div style="color:red;"><%= error %></div><% } %>
     <form id="checkout-form" method="POST" action="/buy/<%= product.id %>/create-pay" data-stripe-key="<%= process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '' %>">
-      <label>Title <input name="title" type="text" value="" /></label>
-      <label>Your email <input name="buyerEmail" type="email" required /></label>
+      <div class="card card--section">
+        <div class="card-body">
+          <label class="input-with-icon">E-mail
+            <input name="buyerEmail" type="email" required />
+          </label>
+          <label class="input-with-icon">Tytuł strony
+            <input name="title" type="text" value="" />
+          </label>
+        </div>
+      </div>
+      
       <input type="hidden" name="productId" value="<%= product.id %>" />
-      <input id="checkout-submit" type="submit" value="Przejdź do płatności" />
+      <input id="checkout-submit" class="btn btn-primary" type="submit" value="Przejdź do płatności" />
     </form>
     <script src="https://js.stripe.com/v3/"></script>
     <script src="/js/checkout.js" defer></script>
   </main>
+  <%- include('partials/footer') %>
 </body>
 </html>

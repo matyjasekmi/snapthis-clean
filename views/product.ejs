@@ -6,10 +6,9 @@
     <h1><%= product.title %></h1>
     <p><%= product.description %></p>
     <div>Price: <%= product.price %></div>
-    <form id="checkout-form" action="/checkout" method="post" data-stripe-key="<%= process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '' %>">
-      <input type="hidden" name="productId" value="<%= product.id %>" />
-      <input id="checkout-submit" type="submit" value="Przejdź do płatności">
-    </form>
+    <div class="product-actions">
+      <a class="button" href="/buy/<%= product.id %>">Kup teraz</a>
+    </div>
     <script src="https://js.stripe.com/v3/"></script>
     <script src="/js/checkout.js" defer></script>
   </main>

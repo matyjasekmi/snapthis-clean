@@ -5,11 +5,14 @@
   <main>
     <h1>Buy <%= product.title %></h1>
     <% if (error) { %><div style="color:red;"><%= error %></div><% } %>
-    <form method="POST" action="/buy/<%= product.id %>/create-pay">
+    <form id="checkout-form" method="POST" action="/buy/<%= product.id %>/create-pay" data-stripe-key="<%= process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '' %>">
       <label>Title <input name="title" type="text" value="" /></label>
       <label>Your email <input name="buyerEmail" type="email" required /></label>
-      <button type="submit">Create guest page</button>
+      <input type="hidden" name="productId" value="<%= product.id %>" />
+      <input id="checkout-submit" type="submit" value="Przejdź do płatności" />
     </form>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/js/checkout.js" defer></script>
   </main>
 </body>
 </html>

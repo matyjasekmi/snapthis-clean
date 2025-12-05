@@ -123,6 +123,14 @@ app.post('/checkout', async (req, res) => {
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const productId = req.body.productId || 'standard';
+    const title = req.body.title || `${productId} Event`;
+    const buyerEmail = req.body.buyerEmail || '';
+    const token = shortid.generate();
+    const record = { id: token, productid: productId, title, buyeremail: buyerEmail, createdat: new Date().toISOString() };
+    // create guestpage record before creating Stripe session
+    if (supabaseServer) {
+      try { const { data, error } = await supabaseServer.from('guestpages').insert([record]); if (error) throw error; } catch(e) { console.error('[supabase] failed to insert guestPage', e); }
+    } else { fallbackStore.guestPages.push(record); }
     // find product
     let product = fallbackStore.products.find(p => p.id === productId);
     if (supabaseServer) {
@@ -145,7 +153,10 @@ app.post('/create-checkout-session', async (req, res) => {
           quantity: 1
         }
       ],
-      success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      // include guest token in success redirect
+      client_reference_id: token,
+      metadata: { token },
+      success_url: `${siteUrl}/success?token=${token}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/product/${productId}`,
     });
     return res.json({ sessionId: session.id, url: session.url });
@@ -242,7 +253,8 @@ app.post('/buy/:id/create-pay', async (req, res) => {
       line_items: [
         { price_data: { currency: 'pln', product_data: { name: product.title }, unit_amount: amount }, quantity: 1 }
       ],
-      success_url: `${siteUrl}/guest/${token}?session_id={CHECKOUT_SESSION_ID}&paid=1`,
+      // On success, redirect to our success page with token, which will link to the guest page
+      success_url: `${siteUrl}/success?token=${token}&session_id={CHECKOUT_SESSION_ID}&paid=1`,
       cancel_url: `${siteUrl}/guest/${token}?cancel=1`,
     });
     return res.redirect(303, session.url);
@@ -376,7 +388,9 @@ app.get('/admin', (req, res) => {
 
 // Stripe success and cancel pages
 app.get('/success', (req, res) => {
-  res.send('<html><body><h1>Payment successful</h1><p>Thank you for your purchase.</p><p><a href="/">Return home</a></p></body></html>');
+  // Render a success page which links to the guest page if token is present
+  const token = req.query && req.query.token ? req.query.token : null;
+  res.render('success', { token });
 });
 app.get('/cancel', (req, res) => {
   res.send('<html><body><h1>Payment cancelled</h1><p>Your payment was cancelled.</p><p><a href="/">Return home</a></p></body></html>');
